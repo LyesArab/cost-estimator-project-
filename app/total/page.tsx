@@ -19,7 +19,9 @@ export default function TotalPage() {
     removeFeature, 
     taxRate, 
     subtotal, 
-    taxAmount, 
+    taxAmount,
+    casnos,
+    isAutoEntrepreneur,
     totalCost,
     generateInvoice 
   } = useCostEstimator();
@@ -75,7 +77,7 @@ export default function TotalPage() {
                         <li key={expense.id} className="flex justify-between items-center py-1.5 px-3 text-sm rounded-lg hover:bg-gray-100 transition-colors">
                           <span className="text-gray-700">{expense.name}</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-800">${expense.amount.toFixed(2)}/mois</span>
+                            <span className="text-sm font-medium text-gray-800">{expense.amount.toFixed(0)} DA/mois</span>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -98,29 +100,32 @@ export default function TotalPage() {
                   <div className="mb-5">
                     <h3 className="text-base font-medium mb-3 text-gray-800">Fonctionnalités</h3>
                     <ul className="space-y-2 max-h-40 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-3">
-                      {features.map((feature) => (
-                        <li key={feature.id} className="py-1.5 px-3 text-sm rounded-lg hover:bg-gray-100 transition-colors">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-700">{feature.name}</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-800">
-                                ${(feature.hours * feature.hourlyRate).toFixed(2)}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeFeature(feature.id)}
-                                className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-gray-100"
-                              >
-                                ✕
-                              </Button>
+                      {features.map((feature) => {
+                        const complexityLabel = feature.complexity === "low" ? "Basique" : feature.complexity === "high" ? "Complexe" : "Moyenne";
+                        return (
+                          <li key={feature.id} className="py-1.5 px-3 text-sm rounded-lg hover:bg-gray-100 transition-colors">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-700">{feature.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-800">
+                                  {(feature.hours * feature.hourlyRate).toFixed(0)} DA
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeFeature(feature.id)}
+                                  className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-gray-100"
+                                >
+                                  ✕
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {feature.hours}h × ${feature.hourlyRate}/h
-                          </p>
-                        </li>
-                      ))}
+                            <p className="text-xs text-gray-500 mt-1">
+                              {feature.hours}h × {complexityLabel} × {feature.hourlyRate.toFixed(0)} DA/h
+                            </p>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 </FadeIn>
@@ -131,22 +136,44 @@ export default function TotalPage() {
                 <div className="py-4 border-t border-b border-gray-200 my-4">
                   <div className="flex justify-between py-1.5 text-sm">
                     <span className="text-gray-700">Sous-total</span>
-                    <span className="font-medium text-gray-800">${subtotal.toFixed(2)}</span>
+                    <span className="font-medium text-gray-800">{subtotal.toFixed(0)} DA</span>
                   </div>
-                  <div className="flex justify-between py-1.5 text-sm">
-                    <span className="text-gray-700">Taxes ({(taxRate * 100).toFixed(1)}%)</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-800">${taxAmount.toFixed(2)}</span>
-                      <Link href="/tax">
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-gray-500 hover:text-blue-600 hover:bg-gray-100">
-                          ✎
-                        </Button>
-                      </Link>
+                  
+                  {isAutoEntrepreneur ? (
+                    <>
+                      <div className="flex justify-between py-1.5 text-sm">
+                        <span className="text-gray-700">Impôt forfaitaire unique (0.5%)</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-800">{taxAmount.toFixed(0)} DA</span>
+                          <Link href="/tax">
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-gray-500 hover:text-blue-600 hover:bg-gray-100">
+                              ✎
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                      <div className="flex justify-between py-1.5 text-sm">
+                        <span className="text-gray-700">CASNOS (24 000 DA/an)</span>
+                        <span className="font-medium text-gray-800">{casnos.toFixed(0)} DA</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between py-1.5 text-sm">
+                      <span className="text-gray-700">Taxes ({(taxRate * 100).toFixed(1)}%)</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-800">{taxAmount.toFixed(0)} DA</span>
+                        <Link href="/tax">
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-gray-500 hover:text-blue-600 hover:bg-gray-100">
+                            ✎
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  
                   <div className="flex justify-between py-2 text-base font-bold mt-1 text-gray-800">
                     <span>Total</span>
-                    <span>${totalCost.toFixed(2)}</span>
+                    <span>{totalCost.toFixed(0)} DA</span>
                   </div>
                 </div>
               </FadeIn>

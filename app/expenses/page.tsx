@@ -119,7 +119,7 @@ export default function ExpensesPage() {
                         {...register("amount")}
                       />
                       <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                        <span className="text-muted-foreground">$</span>
+                        <span className="text-muted-foreground">DA</span>
                       </div>
                     </div>
                     {errors.amount && (
@@ -141,7 +141,7 @@ export default function ExpensesPage() {
                         {expenses.map((expense) => (
                           <tr key={expense.id} className="border-b last:border-b-0 hover:bg-muted/30">
                             <td className="px-3 py-2 text-sm">{expense.name}</td>
-                            <td className="px-3 py-2 text-sm text-right font-medium">${expense.amount.toFixed(2)}/mois</td>
+                            <td className="px-3 py-2 text-sm text-right font-medium">{expense.amount.toFixed(0)} DA/mois</td>
                             <td className="px-2 py-2 text-right w-10">
                               <Button
                                 variant="ghost"
@@ -160,7 +160,7 @@ export default function ExpensesPage() {
 
                   <div className="px-3 py-3 bg-muted/20 border-t flex justify-between items-center">
                     <span className="font-medium">Total des dépenses:</span>
-                    <span className="font-bold">${totalExpenses.toFixed(2)}/mois</span>
+                    <span className="font-bold">{totalExpenses.toFixed(0)} DA/mois</span>
                   </div>
                 </div>
               )}

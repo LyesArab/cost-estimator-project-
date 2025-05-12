@@ -22,15 +22,18 @@ interface CostEstimatorContextType {
   expenses: Expense[];
   features: Feature[];
   taxRate: number;
+  isAutoEntrepreneur: boolean;
   addExpense: (expense: Expense) => void;
   removeExpense: (id: string) => void;
   addFeature: (feature: Feature) => void;
   removeFeature: (id: string) => void;
   setTaxRate: (rate: number) => void;
+  setIsAutoEntrepreneur: (value: boolean) => void;
   totalExpenses: number;
   totalFeatureCosts: number;
   subtotal: number;
   taxAmount: number;
+  casnos: number;
   totalCost: number;
   generateInvoice: (name: string) => void;
 }
@@ -53,7 +56,11 @@ export function CostEstimatorProvider({ children }: CostEstimatorProviderProps) 
   const { toast } = useToast();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [features, setFeatures] = useState<Feature[]>([]);
-  const [taxRate, setTaxRate] = useState<number>(0.20); // Default tax rate for self-employed (20%)
+  const [taxRate, setTaxRate] = useState<number>(0.20); // Default tax rate (20%)
+  const [isAutoEntrepreneur, setIsAutoEntrepreneur] = useState<boolean>(false);
+
+  const CASNOS_ANNUAL = 24000; // 24,000 DA per year
+  const AUTO_ENTREPRENEUR_TAX_RATE = 0.005; // 0.5%
 
   // Function to add a new expense
   const addExpense = (expense: Expense) => {
@@ -87,11 +94,16 @@ export function CostEstimatorProvider({ children }: CostEstimatorProviderProps) 
   // Calculate total project cost before tax
   const subtotal = totalExpenses + totalFeatureCosts;
 
+  // Calculate CASNOS (for auto-entrepreneur only)
+  const casnos = isAutoEntrepreneur ? CASNOS_ANNUAL : 0;
+
   // Calculate tax amount
-  const taxAmount = subtotal * taxRate;
+  const taxAmount = isAutoEntrepreneur 
+    ? subtotal * AUTO_ENTREPRENEUR_TAX_RATE // 0.5% for auto-entrepreneur
+    : subtotal * taxRate;
 
   // Calculate total project cost
-  const totalCost = subtotal + taxAmount;
+  const totalCost = subtotal + taxAmount + casnos;
 
   // Function to generate PDF invoice
   const generateInvoice = (name: string) => {
@@ -113,7 +125,7 @@ export function CostEstimatorProvider({ children }: CostEstimatorProviderProps) 
     let yPosition = 80;
     expenses.forEach((expense) => {
       doc.setFontSize(12);
-      doc.text(`${expense.name}: $${expense.amount.toFixed(2)}`, 30, yPosition);
+      doc.text(`${expense.name}: ${expense.amount.toFixed(0)} DA`, 30, yPosition);
       yPosition += 10;
     });
     
@@ -126,19 +138,28 @@ export function CostEstimatorProvider({ children }: CostEstimatorProviderProps) 
     features.forEach((feature) => {
       doc.setFontSize(12);
       const cost = feature.hours * feature.hourlyRate;
-      doc.text(`${feature.name} (${feature.complexity}): ${feature.hours} hrs × $${feature.hourlyRate}/hr = $${cost.toFixed(2)}`, 30, yPosition);
+      let complexityLabel = feature.complexity === "low" ? "Basique" : feature.complexity === "high" ? "Complexe" : "Moyenne";
+      doc.text(`${feature.name} (${complexityLabel}): ${feature.hours} hrs × ${feature.hourlyRate.toFixed(0)} DA/hr = ${cost.toFixed(0)} DA`, 30, yPosition);
       yPosition += 10;
     });
     
     // Add totals
     yPosition += 10;
     doc.setFontSize(14);
-    doc.text(`Subtotal: $${subtotal.toFixed(2)}`, 20, yPosition);
+    doc.text(`Subtotal: ${subtotal.toFixed(0)} DA`, 20, yPosition);
     yPosition += 10;
-    doc.text(`Tax (${(taxRate * 100).toFixed(0)}%): $${taxAmount.toFixed(2)}`, 20, yPosition);
+    
+    if (isAutoEntrepreneur) {
+      doc.text(`Impôt forfaitaire unique (0.5%): ${taxAmount.toFixed(0)} DA`, 20, yPosition);
+      yPosition += 10;
+      doc.text(`CASNOS: ${casnos.toFixed(0)} DA`, 20, yPosition);
+    } else {
+      doc.text(`Tax (${(taxRate * 100).toFixed(0)}%): ${taxAmount.toFixed(0)} DA`, 20, yPosition);
+    }
+    
     yPosition += 10;
     doc.setFontSize(16);
-    doc.text(`Total: $${totalCost.toFixed(2)}`, 20, yPosition);
+    doc.text(`Total: ${totalCost.toFixed(0)} DA`, 20, yPosition);
     
     // Save the PDF
     doc.save("project-cost-estimate.pdf");
@@ -153,15 +174,18 @@ export function CostEstimatorProvider({ children }: CostEstimatorProviderProps) 
     expenses,
     features,
     taxRate,
+    isAutoEntrepreneur,
     addExpense,
     removeExpense,
     addFeature,
     removeFeature,
     setTaxRate,
+    setIsAutoEntrepreneur,
     totalExpenses,
     totalFeatureCosts,
     subtotal,
     taxAmount,
+    casnos,
     totalCost,
     generateInvoice
   };

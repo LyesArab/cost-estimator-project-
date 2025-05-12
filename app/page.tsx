@@ -15,7 +15,7 @@ export default function Home() {
         <SlideInFromTop>
           <CardHeader className="bg-white pb-4">
             <CardTitle className="text-center text-2xl font-bold text-gray-800">
-              Calculateur de Coûts pour Freelance
+              Calculateur de Coûts pour les Projets Freelances
             </CardTitle>
           </CardHeader>
         </SlideInFromTop>

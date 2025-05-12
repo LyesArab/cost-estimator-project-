@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +38,8 @@ export default function FeaturesPage() {
     handleSubmit,
     reset,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm<FeatureFormValues>({
     resolver: zodResolver(featureSchema),
     defaultValues: {
@@ -47,13 +50,27 @@ export default function FeaturesPage() {
     },
   });
 
+  const watchComplexity = watch("complexity");
+  
+  // Adjust hourly rate based on complexity
+  const getComplexityMultiplier = (complexity: string) => {
+    switch(complexity) {
+      case "low": return 0.8;
+      case "high": return 1.2;
+      default: return 1;
+    }
+  };
+
   const onSubmit = (data: FeatureFormValues) => {
+    const complexityMultiplier = getComplexityMultiplier(data.complexity);
+    const finalHourlyRate = parseFloat(data.hourlyRate) * complexityMultiplier;
+    
     const newFeature = {
       id: crypto.randomUUID(),
       name: data.name,
       complexity: data.complexity,
       hours: parseFloat(data.hours),
-      hourlyRate: parseFloat(data.hourlyRate),
+      hourlyRate: finalHourlyRate,
     };
 
     addFeature(newFeature);
@@ -128,15 +145,19 @@ export default function FeaturesPage() {
                     </div>
 
                     <div className="w-32">
-                      <select
-                        id="feature-complexity"
-                        className="h-10 w-full rounded-md border border-input bg-white px-2 py-2 text-sm"
-                        {...register("complexity")}
+                      <Select 
+                        value={watchComplexity} 
+                        onValueChange={(value) => setValue("complexity", value as "low" | "medium" | "high")}
                       >
-                        <option value="low">Basique</option>
-                        <option value="medium">Moyenne</option>
-                        <option value="high">Complexe</option>
-                      </select>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Complexité" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Basique</SelectItem>
+                          <SelectItem value="medium">Moyenne</SelectItem>
+                          <SelectItem value="high">Complexe</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
@@ -170,7 +191,7 @@ export default function FeaturesPage() {
                           {...register("hourlyRate")}
                         />
                         <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                          <span className="text-muted-foreground">$</span>
+                          <span className="text-muted-foreground">DA</span>
                         </div>
                       </div>
                       {errors.hourlyRate && (
@@ -206,8 +227,8 @@ export default function FeaturesPage() {
                             </Button>
                           </div>
                           <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{feature.hours} h × ${feature.hourlyRate}/h</span>
-                            <span className="font-medium text-foreground">${(feature.hours * feature.hourlyRate).toFixed(2)}</span>
+                            <span>{feature.hours} h × {feature.complexity === "low" ? "Basique" : feature.complexity === "high" ? "Complexe" : "Moyenne"} × {feature.hourlyRate.toFixed(0)} DA/h</span>
+                            <span className="font-medium text-foreground">{(feature.hours * feature.hourlyRate).toFixed(0)} DA</span>
                           </div>
                         </div>
                       ))}
@@ -216,7 +237,7 @@ export default function FeaturesPage() {
 
                   <div className="px-3 py-3 bg-muted/20 border-t flex justify-between items-center">
                     <span className="font-medium">Total des fonctionnalités:</span>
-                    <span className="font-bold">${totalFeatureCost.toFixed(2)}</span>
+                    <span className="font-bold">{totalFeatureCost.toFixed(0)} DA</span>
                   </div>
                 </div>
               )}
