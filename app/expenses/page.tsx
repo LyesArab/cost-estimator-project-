@@ -99,7 +99,7 @@ export default function ExpensesPage() {
                   <div className="flex-1">
                     <Input
                       id="expense-name"
-                      placeholder="Nom de la dépense"
+                      placeholder="Exemple: Serveur, Abonnement, Licence, etc."
                       {...register("name")}
                     />
                     {errors.name && (
